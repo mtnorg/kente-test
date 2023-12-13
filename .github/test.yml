@@ -5,11 +5,13 @@ on:
       - dev
       - main
       - master
+      - feature
   pull_request:
     branches:
       - main
       - dev
       - master
+      - feature
 
 jobs:
   run-action:

@@ -70,8 +70,8 @@ jobs:
          with:
            projectBaseDir: src
            args: >
-            -Dsonar.organization=sonarscankey
-            -Dsonar.projectKey=accenturetesting19_Testingintegration
+            -Dsonar.organization=mtnorg_kente-test
+            -Dsonar.projectKey=mtnorg
             -Dsonar.qualitygate.wait=true
             
            

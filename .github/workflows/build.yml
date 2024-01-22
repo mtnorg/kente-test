@@ -79,10 +79,22 @@ jobs:
            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  
   
-          
+  Codelinting:
+     needs: [CodeQLanalysis,Sonarcloud]
+     runs-on: 'ubuntu-latest'     
+     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Super-linter
+        uses: super-linter/super-linter@v5.7.2  # x-release-please-version
+        env:
+          #DEFAULT_BRANCH: develop
+          FILTER_REGEX_INCLUDE: .*src/.*
+          # To report GitHub Actions status checks
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
 
   Buildartifacts:
-     needs: [CodeQLanalysis,Sonarcloud]
+     needs: [CodeQLanalysis,Sonarcloud,Codelinting]
      runs-on: 'ubuntu-latest'     
      steps:
       - name: Checkout repository
@@ -102,42 +114,54 @@ jobs:
         run: npm install
       - name: Build artifacts
         run: npm run build
+      - name: Upload build artifacts
+        run: mkdir -p buildpath/artifact
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+         name: buildartifactupload
+         path: buildpath/artifact
       - name: Coverage
         run: npm run test --coverage
       - name: Unittesting
         run: npm run test
+      - name: Run my coverage
+        uses: kcjpop/coverage-comments@v2.2
+        with:
+         github-token: ${{ secrets.GITHUB_TOKEN }}
+         coverage-file: './coverage/clover.xml'  
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3     
+        uses: codecov/codecov-action@v4-beta 
         
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
        
-  Build_Docker_Image:
-     needs: CodeandTestcoverage
-     runs-on: 'ubuntu-latest'     
-     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build an image from Dockerfile
-        run: |
-          docker build -t docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }} .
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }} 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+#  Build_Docker_Image:
+#     needs: CodeandTestcoverage
+#     runs-on: 'ubuntu-latest'     
+#     steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v3
+#     - name: Log in to Docker Hub
+#       uses: docker/login-action@v3
+#       with:
+#         username: ${{ secrets.DOCKERHUB_USERNAME }}
+#         password: ${{ secrets.DOCKERHUB_TOKEN }}
+#     - name: Build an image from Dockerfile
+#       run: |
+#         docker build -t docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }} .
+#     - name: Extract metadata (tags, labels) for Docker
+#       id: meta
+#       uses: docker/metadata-action@v5
+#       with:
+#         images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }} 
+#     - name: Build and push Docker image
+#       uses: docker/build-push-action@v5
+#       with:
+#         context: .
+#         push: true
+#         tags: ${{ steps.meta.outputs.tags }}
+#         labels: ${{ steps.meta.outputs.labels }}
 
  # Buildazure:
   #   needs: Build_Docker_Image

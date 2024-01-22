@@ -89,7 +89,8 @@ jobs:
         uses: super-linter/super-linter@v5.7.2  # x-release-please-version
         env:
           #DEFAULT_BRANCH: develop
-          FILTER_REGEX_INCLUDE: .*src/.*
+         # FILTER_REGEX_INCLUDE: .*src/.*
+          TYPESCRIPT_ES_CONFIG_FILE: .eslintrc.yml
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
 

@@ -136,6 +136,7 @@ jobs:
         
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          disable_default_path_fixes: true
        
 #  Build_Docker_Image:
 #     needs: CodeandTestcoverage
